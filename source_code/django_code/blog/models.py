@@ -2,7 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from django.utils.timezone import now as Now
-
+from django.urls import reverse
 
 class PublishedManager(models.Manager):
     def get_queryset(self):
@@ -24,7 +24,7 @@ class Post(models.Model):
         )
     objects = models.Manager() # The default manager
     published = PublishedManager() # Our custom manager
-    
+
     # Post contents
     title = models.CharField(max_length=250)
     slug = models.SlugField(max_length=250)
@@ -35,6 +35,8 @@ class Post(models.Model):
     publish = models.DateTimeField(default=timezone.now)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+
+    # Status
     status = models.CharField(
         max_length=2, 
         choices=Status, 
@@ -49,3 +51,10 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
+    
+    # Returns the canonical URL for a post
+    def get_absolute_url(self):
+        return reverse(
+            'blog:post_detail',
+            args=[self.id]
+        )
