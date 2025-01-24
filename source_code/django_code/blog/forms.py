@@ -1,3 +1,4 @@
+# Django form classes for the blog application
 from django import forms
 
 class EmailPostForm(forms.Form):
@@ -9,6 +10,7 @@ class EmailPostForm(forms.Form):
         widget=forms.Textarea
         )
     
+# Comment form
 from django import forms
 from .models import Comment
 
@@ -16,3 +18,8 @@ class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
         fields = ['name', 'email', 'body']
+
+
+# Search form
+class SearchForm(forms.Form):
+    query = forms.CharField()
