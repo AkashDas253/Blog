@@ -38,6 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # External apps
+    'taggit', # Tags
+    'django.contrib.sites', # Sites
+    'django.contrib.sitemaps', # Sitemaps
     # Internal apps
     'blog.apps.BlogConfig', # Blog app
 ]
@@ -180,3 +184,6 @@ LOGGING = {
 
 # Test runner
 TEST_RUNNER = 'project.test_runner.CustomTestRunner'
+
+# Site ID
+SITE_ID = config('SITE_ID', default=1, cast=int)

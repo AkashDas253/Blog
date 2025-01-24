@@ -1,35 +1,43 @@
 # Post list
+from taggit.models import Tag
 from django.shortcuts import render, get_object_or_404
-from .models import Post
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from .models import Post
 
-def post_list(request):
-    # All published posts
+def post_list(request, tag_slug=None):
+    # Get all published posts
     post_list = Post.published.all()
+    tag = None
+
+    # If a tag_slug is provided, filter posts by that tag
+    if tag_slug:
+        tag = get_object_or_404(Tag, slug=tag_slug)
+        post_list = post_list.filter(tags__in=[tag])
 
     # Pagination with 3 posts per page
     paginator = Paginator(post_list, 3)
     page_number = request.GET.get('page', 1)
-    
-    # Pagination error
+
     try:
         posts = paginator.page(page_number)
     except PageNotAnInteger:
-        # If page_number is not an integer get the first page
+        # If page_number is not an integer, get the first page
         posts = paginator.page(1)
     except EmptyPage:
-        # If page_number is out of range get last page of results
+        # If page_number is out of range, get the last page of results
         posts = paginator.page(paginator.num_pages)
 
     return render(
         request,
         'blog/post/list.html',
-        {'posts': posts}
+        {
+            'posts': posts,
+            'tag': tag  # Pass the tag to the template
+        }
     )
 
-from django.shortcuts import render, get_object_or_404
-from .models import Post, Comment
-from .forms import CommentForm
+# Post details
+from django.db.models import Count
 
 def post_detail(request, year, month, day, post):
     post = get_object_or_404(
@@ -40,10 +48,23 @@ def post_detail(request, year, month, day, post):
         publish__month=month,
         publish__day=day
     )
+    
     # List of active comments for this post
     comments = post.comments.filter(active=True)
+    
     # Form for users to comment
     form = CommentForm()
+    
+    # List of similar posts
+    post_tags_ids = post.tags.values_list('id', flat=True)  # Get all tag IDs for the current post
+    similar_posts = Post.published.filter(
+        tags__in=post_tags_ids  # Filter posts that share tags with the current post
+    ).exclude(id=post.id)  # Exclude the current post itself
+    
+    # Annotate similar posts with a count of shared tags
+    similar_posts = similar_posts.annotate(
+        same_tags=Count('tags')  # Count the shared tags for each post
+    ).order_by('-same_tags', '-publish')[:4]  # Order by shared tag count and publish date, limit to 4 posts
     
     return render(
         request,
@@ -51,9 +72,11 @@ def post_detail(request, year, month, day, post):
         {
             'post': post,
             'comments': comments,
-            'form': form
+            'form': form,
+            'similar_posts': similar_posts  # Pass similar posts to the template
         }
     )
+
 
 # Email post sharing views
 from django.shortcuts import render, get_object_or_404
