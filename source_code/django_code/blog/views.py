@@ -158,7 +158,7 @@ from django.contrib.postgres.search import (
     SearchQuery,
     SearchRank
 )
-from .forms import CommentForm, EmailPostForm, SearchForm
+from .forms import SearchForm
 from django.contrib.postgres.search import TrigramSimilarity
 
 def post_search(request):
